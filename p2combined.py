@@ -237,7 +237,7 @@ def main():
     pitch = 0.0
     xoffset = 0.0
     yoffset = 0.0
-    lastX = display[0] /  2
+    lastX = display[0] / 2
     lastY = display[1] / 2
     fov = 45.0
 
@@ -265,6 +265,7 @@ def main():
     pygame.mouse.set_visible(True)
     pygame.event.set_grab(True)
     middle = False
+    select = False
 
     #glEnable(GL_DEPTH_TEST)
     glEnable(GL_BLEND)
@@ -272,9 +273,6 @@ def main():
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_COLOR)
     #glBlendFunc(GL_SRC_ALPHA, GL_ZERO)
 
-    click = False
-    moving = False
-    ballradius = min(display[0] / 2, display[1] / 2)
     initial = True
     model = Mat4x4()
     newmodel = Mat4x4()
@@ -293,26 +291,9 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if event.type == pygame.MOUSEMOTION and not initial:
-                motion = True
-                #print("I am moving")
-            else:
-                #print("NOT moving")
-                motion = False
-            if event.type ==  pygame.MOUSEMOTION and click and not moving:
-                print ("Start")
-                moving = True
-                xpos, ypos = pygame.mouse.get_pos()
-                xpos = (xpos - (display[0] / 2))
-                ypos = ((display[1] / 2) - ypos)
-                startRotationVector = convertXY(xpos, ypos, ballradius)
-                startRotationVector = normalize(startRotationVector)
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    #Left Click Down
-                    #Enable Rotate Mode
-                    print("Left Click down")
-                    click = True
+                if event.button == 1 and select:
+                    print("Point Selected !?")
                 if event.button == 4:
                     # ZOOM IN
                     if middle:
@@ -362,9 +343,7 @@ def main():
                     d = 0.0
                     fovdelta = 0.0
                     middle = False
-                    click = False
-                    moving = False
-                    ballradius = min(display[0] / 2, display[1] / 2)
+                    select = False
                     initial = True
                     model = Mat4x4()
                     newmodel = Mat4x4()
@@ -377,12 +356,6 @@ def main():
                     #pygame.quit()
                     #quit()
             if event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:
-                    #Left Click Up
-                    print("STOP")
-                    click = False
-                    moving = False
-                    initial = True
                 if event.button == 2:
                     middle = False
                     print("DONE")
@@ -459,8 +432,10 @@ def main():
         #print(mindist)
         if(mindist < 0.02):
             pygame.mouse.set_cursor(*pygame.cursors.diamond)
+            select = True
         else:
             pygame.mouse.set_cursor(*pygame.cursors.arrow)
+            select = False
         #pLine = getPoint(xyz_n, xyz_f, myp)
         #dist = pLine - myp
         #x = np.linalg.norm(dist)
@@ -471,53 +446,7 @@ def main():
         # else:
         #     pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
-        #Transform
-        # xpos, ypos = pygame.mouse.get_pos()
-        # #xpos = (xpos/ (display[0] / 2)) - 1
-        # #ypos = ((ypos / (display[1] / 2)) - 1)
-        # screen_vec = np.zeros((4,1))
-        # screen_vec[0, 0] = xpos
-        # screen_vec[1, 0] = ypos
-        # screen_vec[2, 0] = 0.0
-        # screen_vec[3, 0] = 1.0
-        # #Front XYZ in world coordinates
-        # p = convertnp(projection)
-        # v = convertnp(view)
-        # m = convertnp(model)
-        # pi = np.linalg.inv(p)
-        # vi = np.linalg.inv(v)
-        # mi = np.linalg.inv(m)
-        # z = np.matmul(mi, np.matmul(vi, np.matmul(pi, screen_vec) ) )
-        # print(z)
-        #print(z[-1])
-        #z = z[:-1]
-        #zg = z * -1
-        #z = z[:-1] / np.linalg.norm(z[:-1])
-        
-        if moving:
-            xoffset = 0.0
-            yoffset = 0.0
-            #update Rotation Vector
-            xpos, ypos = pygame.mouse.get_pos()
-            xpos = (xpos - (display[0] / 2))
-            ypos = ((display[1] / 2) - ypos)
-            currentRotationVector = convertXY(xpos, ypos, ballradius)
-            currentRotationVector = normalize(currentRotationVector)
-            diff = currentRotationVector - startRotationVector
-            mag = math.sqrt((diff.x) * (diff.x) + (diff.y) * (diff.y) + (diff.z) * (diff.z))
-            if mag > 1E-6:
-                rotationAxis = cross(currentRotationVector, startRotationVector) #normalized
-                val = dotVec(currentRotationVector, startRotationVector)
-                if val > (1 - 1E-10):
-                    val = 1.0
-                rotationAngle = math.degrees(math.acos(val))
-                axis = Vec3(-rotationAxis.x, -rotationAxis.y, -rotationAxis.z)
-                newmodel = Mat4x4()
-                newmodel = rotate(newmodel, rotationAngle * 2, axis)
-        else:
-                oldmodel = model
-                newmodel = Mat4x4()
-        model = newmodel.__mul__(oldmodel)
+        model = Mat4x4()
         modelList = convert(model)
         modelLoc = glGetUniformLocation(shader, "model")
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelList)
@@ -531,29 +460,29 @@ def main():
         #camZ = 0.638  + math.cos(timeValue) * radius
         #cameraPos = Vec3(camX, -0.637, camZ)
         #view = lookAt(cameraPos, cameraTarget, up)
-        
-        if not moving:
-            xpos, ypos = pygame.mouse.get_pos()
-            if xpos > display[0] -5 or ypos > display[1] -5 or xpos < 5 or ypos < 5:
-                pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
-                xoffset = 0
-                yoffset = 0
-                lastX = display[0] / 2
-                lastY = display[1] / 2
-            if initial:
-                pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
-                xoffset = 0
-                yoffset = 0
-                lastX = display[0] / 2
-                lastY = display[1] / 2
 
-                initial = False
-                oldV = Mat4x4()
-            else:  
-                xoffset = xpos - lastX
-                yoffset = ypos - lastY
-                lastX = xpos
-                lastY = ypos 
+        #Calculate Mouse Offsets
+        xpos, ypos = pygame.mouse.get_pos()
+        if xpos > display[0] -5 or ypos > display[1] -5 or xpos < 5 or ypos < 5:
+            pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
+            xoffset = 0
+            yoffset = 0
+            lastX = display[0] / 2
+            lastY = display[1] / 2
+        if initial:
+            pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
+            xoffset = 0
+            yoffset = 0
+            lastX = display[0] / 2
+            lastY = display[1] / 2
+
+            initial = False
+            oldV = Mat4x4()
+        else:  
+            xoffset = xpos - lastX
+            yoffset = ypos - lastY
+            lastX = xpos
+            lastY = ypos 
         #xoffset, yoffset = pygame.mouse.get_rel()
         sensitivity = 0.3
         xoffset *= sensitivity
