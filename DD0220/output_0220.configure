@@ -1,0 +1,74 @@
+========================================================================
+make show-version
+========================================================================
+
+Mercurial Branch   week-of-code
+Mercurial Revision ca12955facd9+
+
+========================================================================
+gmake show-config
+========================================================================
+
+   MACHINE: Georgia Tech FoRCE (Intel)
+   MACHINE-NAME: force-icc
+
+   PARAMETER_MAX_SUBGRIDS  [max-subgrids-###]                : 50000
+   PARAMETER_MAX_BARYONS  [max-baryons-###]                  : 30
+   PARAMETER_MAX_TASKS_PER_NODE  [max-tasks-per-node-###]    : 8
+   PARAMETER_MEMORY_POOL_SIZE  [memory-pool-###]             : 100000
+
+   CONFIG_PRECISION  [precision-{32,64}]                     : 32
+   CONFIG_PARTICLES  [particles-{32,64,128}]                 : 64
+   CONFIG_INTEGERS  [integers-{32,64}]                       : 32
+   CONFIG_PARTICLE_IDS  [particle-id-{32,64}]                : 32
+   CONFIG_INITS  [inits-{32,64}]                             : 32
+   CONFIG_IO  [io-{32,64}]                                   : 32
+   CONFIG_USE_MPI  [use-mpi-{yes,no}]                        : yes
+   CONFIG_OBJECT_MODE  [object-mode-{32,64}]                 : 64
+   CONFIG_TASKMAP  [taskmap-{yes,no}]                        : no
+   CONFIG_PACKED_AMR  [packed-amr-{yes,no}]                  : yes
+   CONFIG_PACKED_MEM  [packed-mem-{yes,no}]                  : no
+   CONFIG_LCAPERF  [lcaperf-{yes,no}]                        : no
+   CONFIG_PAPI  [papi-{yes,no}]                              : no
+   CONFIG_PYTHON  [python-{yes,no}]                          : no
+   CONFIG_NEW_PROBLEM_TYPES  [new-problem-types-{yes,no}]    : no
+   CONFIG_ECUDA  [cuda-{yes,no}]                             : no
+   CONFIG_OOC_BOUNDARY  [ooc-boundary-{yes,no}]              : no
+   CONFIG_ACCELERATION_BOUNDARY  [acceleration-boundary-{yes,no}]              : yes
+   CONFIG_OPT  [opt-{warn,debug,cudadebug,high,aggressive}]  : high
+   CONFIG_TESTING  [testing-{yes,no}]                        : no
+   CONFIG_TPVEL  [tpvel-{yes,no}]]                           : no
+   CONFIG_PHOTON  [photon-{yes,no}]                          : yes
+   CONFIG_HYPRE  [hypre-{yes,no}]                            : no
+   CONFIG_EMISSIVITY  [emissivity-{yes,no}]                  : no
+   CONFIG_USE_HDF4  [use-hdf4-{yes,no}]                      : no
+   CONFIG_NEW_GRID_IO  [newgridio-{yes,no}]                  : yes
+   CONFIG_BITWISE_IDENTICALITY  [bitwise-{yes,no}]           : no
+   CONFIG_FAST_SIB  [fastsib-{yes,no}]                       : yes
+   CONFIG_GRAVITY_4S  [gravity-4s-{yes,no}]                  : no
+   CONFIG_ENZO_PERFORMANCE  [enzo-performance-{yes,no}]      : yes
+
+========================================================================
+gmake show-flags
+========================================================================
+
+CPP = /usr/bin/cpp
+CC  = /usr/local/packages/intel/impi/5.0.1.035/intel64/bin/mpiicc
+CXX = /usr/local/packages/intel/impi/5.0.1.035/intel64/bin/mpiicpc
+FC  = /usr/local/packages/intel/impi/5.0.1.035/intel64/bin/mpiifort
+F90 = /usr/local/packages/intel/impi/5.0.1.035/intel64/bin/mpiifort
+LD  = /usr/local/packages/intel/impi/5.0.1.035/intel64/bin/mpiicpc
+
+DEFINES = -DLINUX -DH5_USE_16_API -DMEM_TRACE  -D__max_subgrids=50000 -D__max_baryons=30 -D__max_cpu_per_node=8 -D__memory_pool_size=100000 -DINITS32 -DSMALL_INTS -DCONFIG_PINT_4 -DIO_32    -DUSE_MPI   -DCONFIG_PFLOAT_8 -DCONFIG_BFLOAT_4  -DUSE_HDF5_GROUPS    -DTRANSFER   -DNEW_GRID_IO -DFAST_SIB      -DENZO_PERFORMANCE  -DSAB
+
+INCLUDES = -I/usr/include -I/nv/hp11/jw254/local/hdf5/1.8.14/intel-15.0/include           -I.
+
+CPPFLAGS = -P -traditional 
+CFLAGS   =  -O2 -mavx -ipo -g -m64 -heap-arrays 
+CXXFLAGS = -DMPICH_IGNORE_CXX_SEEK -O2 -mavx -ipo -g -m64 -heap-arrays 
+FFLAGS   = -132 -O2 -mavx -ipo -g -m64 -heap-arrays 
+F90FLAGS =  -O2 -mavx -ipo -g -m64 -heap-arrays 
+LDFLAGS  =  -O2 -mavx -ipo -g -m64 -heap-arrays 
+
+LIBS     = -L/nv/hp11/jw254/local/hdf5/1.8.14/intel-15.0/lib -lhdf5 -lz  -lifcore -lifport       
+
