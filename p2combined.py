@@ -19,6 +19,8 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from shader import Shader
+
 # import yt
 # yt.enable_plugins()
 
@@ -86,7 +88,7 @@ def convertXY(x, y, ballradius):
 
 
 
-def main(): 
+def main():
     # positions = []
     # myfile = open("p2data.txt", "r")
     # for line in myfile:
@@ -142,8 +144,10 @@ def main():
     #pygame.mouse.set_cursor(*pygame.cursors.diamond)
     display = (1000, 800)
     #display = (800, 600)
-    aspect = display[0] / display [1]
+    aspect = display[0] / display [1]    
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+
+    #Initialize VAO an VBO
     myvao = glGenVertexArrays(1)
     glBindVertexArray(myvao)
     myvbo = glGenBuffers(1)
@@ -151,48 +155,11 @@ def main():
     floatsize = 4  # 4 bytes, 32 bits
     size = floatsize * data.size
     glBufferData(GL_ARRAY_BUFFER, size, numpy.ravel(data), GL_STATIC_DRAW)
-
     glEnable(GL_PROGRAM_POINT_SIZE)
-    vertexShaderSource = """
-    #version 330
-    in vec3 position;
-    in vec3 vcolor;
-    in float psize;
 
-    uniform mat4 model;
-    uniform mat4 view;
-    uniform mat4 projection;
-
-    uniform vec2 screenSize;
-    uniform float spriteSize;
-
-    out vec3 fcolor;
-    
-
-
-    void main()
-    {
-        gl_Position = projection * view * model *  vec4(position, 1.0);
-        gl_PointSize = psize;
-        fcolor = vcolor;
-    }
-    """
-    fragmentShaderSource = """
-    #version 330
-    in vec3 fcolor;
-    out vec4 FragColor;
-    uniform sampler2D tex;
-    void main()
-    {
-        vec4 texColor = texture(tex, gl_PointCoord);
-        //texColor.a = 1.0 - texColor.r;
-        FragColor = texColor * vec4(fcolor, 1.0);
-    }
-    """
-    shader = shaders.compileProgram(shaders.compileShader(vertexShaderSource, GL_VERTEX_SHADER), shaders.compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER))
-    positionAttrib = glGetAttribLocation(shader, "position")
-    colorAttrib = glGetAttribLocation(shader, "vcolor")
-    sizeAttrib = glGetAttribLocation(shader, "psize")
+    #Shader Compilation, Attributes and set stride
+    myshader = Shader("vertexShader.glsl", "fragmentShader.glsl")
+    positionAttrib, colorAttrib, sizeAttrib = myshader.getAttributes()
     #ctypes.c_void_p(offset)
     stride = 7 * floatsize
     glVertexAttribPointer(positionAttrib, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(0))
@@ -206,13 +173,9 @@ def main():
 
 
     glEnable(GL_POINT_SPRITE)
-    #glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE)
-    
     #texture
     textureobject = glGenTextures(1)
     glBindTexture(GL_TEXTURE_2D, textureobject)
-    #glEnable(GL_POINT_SPRITE)
-    #glPointParameteri(GL_POINT_SPRITE_COORD_ORIGIN, GL_UPPER_LEFT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -222,13 +185,6 @@ def main():
     print (width, height)
     img_data = numpy.array(list(image.getdata()), numpy.uint8)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
-
-    #Rotation Around Cluster Vectors
-    #cameraPos = Vec3(-0.739, -0.637, 0.7)
-    #cameraTarget = Vec3(-0.739, -0.637, 0.638)
-    
-    
-
     deltaTime = 0.0
     lastFrame = 0.0
     
@@ -266,6 +222,11 @@ def main():
     pygame.event.set_grab(True)
     middle = False
     select = False
+    center = False
+    rotate_mode = True
+
+    setOrigin = False
+    newFocus = False
 
     #glEnable(GL_DEPTH_TEST)
     glEnable(GL_BLEND)
@@ -291,9 +252,16 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == K_r:
+                    if(not rotate_mode):
+                        initial = True
+                    rotate_mode = not rotate_mode
+                if event.key == K_o and newFocus:
+                    setOrigin = True
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1 and select:
-                    print("Point Selected !?")
+                    center = True
                 if event.button == 4:
                     # ZOOM IN
                     if middle:
@@ -306,7 +274,7 @@ def main():
                         fovdelta = 0.2
                 if event.button == 2:
                     middle = True
-                if event.button == 3:
+                if event.button == 3: #Right Click
                     #Reset initial conditions
                     deltaTime = 0.0
                     lastFrame = 0.0
@@ -344,7 +312,11 @@ def main():
                     fovdelta = 0.0
                     middle = False
                     select = False
+                    rotate_mode = True
+                    center = False
                     initial = True
+                    setOrigin = False
+                    newFocus = False
                     model = Mat4x4()
                     newmodel = Mat4x4()
                     oldmodel = Mat4x4()
@@ -373,7 +345,8 @@ def main():
                     #delta = cross(cameraFront, up) * cameraSpeed
                     #cameraPos += cross(cameraFront, up) * cameraSpeed
                 if event.key == pygame.K_UP:
-                    d = 0.01
+                    cf = np.array([camFocus.x, camFocus.y, camFocus.z])
+                    d = np.linalg.norm(cf)
                     delta2= 0.01 * -1 * camFocus 
                     #delta = cameraSpeed * cameraFront
                     #cameraPos += cameraSpeed * cameraFront
@@ -397,7 +370,8 @@ def main():
                     delta2 = Vec3(0.0, 0.0, 0.0)
         glClear(GL_COLOR_BUFFER_BIT)
         #glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-        glUseProgram(shader)
+        myshader.use()
+        #glUseProgram(shader)
         glBindTexture(GL_TEXTURE_2D, textureobject)
 
 
@@ -429,61 +403,48 @@ def main():
         q = xyz_n + z
         dist = np.linalg.norm(q - pos, axis = 1)
         mindist = np.min(dist)
-        #print(mindist)
-        if(mindist < 0.02):
+        closest_point = pos[np.argmin(dist), :]
+        diff = cameraPos - focus
+        cameraToFocus = np.linalg.norm(np.array([diff.x, diff.y, diff.z]))
+        thresh = 0.004 * cameraToFocus
+        if(mindist < thresh):
             pygame.mouse.set_cursor(*pygame.cursors.diamond)
             select = True
         else:
             pygame.mouse.set_cursor(*pygame.cursors.arrow)
             select = False
-        #pLine = getPoint(xyz_n, xyz_f, myp)
-        #dist = pLine - myp
-        #x = np.linalg.norm(dist)
-        # print(x)
-        # if(x < 0.02):
-        #     z = 5
-        #     pygame.mouse.set_cursor(*pygame.cursors.diamond)
-        # else:
-        #     pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
+        #Set Model Matrix
         model = Mat4x4()
         modelList = convert(model)
-        modelLoc = glGetUniformLocation(shader, "model")
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelList)
-        view = Mat4x4()
-        #view = translate(view, Vec4(0.0, 0.0, -3.0, 0.0))
-        #view = translate(view, Vec4(0.739, 0.637, -0.7, 0.0))
-        
-        #Rotation Around Cluster
-        #radius = 0.2
-        #camX = -0.739 + math.sin(timeValue) * radius
-        #camZ = 0.638  + math.cos(timeValue) * radius
-        #cameraPos = Vec3(camX, -0.637, camZ)
-        #view = lookAt(cameraPos, cameraTarget, up)
+        myshader.setModelMatrix(modelList)
 
+        #View Matrix Calculation
         #Calculate Mouse Offsets
-        xpos, ypos = pygame.mouse.get_pos()
-        if xpos > display[0] -5 or ypos > display[1] -5 or xpos < 5 or ypos < 5:
-            pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
-            xoffset = 0
-            yoffset = 0
-            lastX = display[0] / 2
-            lastY = display[1] / 2
-        if initial:
-            pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
-            xoffset = 0
-            yoffset = 0
-            lastX = display[0] / 2
-            lastY = display[1] / 2
+        if(rotate_mode):
+            xpos, ypos = pygame.mouse.get_pos()
+            if xpos > display[0] -5 or ypos > display[1] -5 or xpos < 5 or ypos < 5:
+                pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
+                xoffset = 0
+                yoffset = 0
+                lastX = display[0] / 2
+                lastY = display[1] / 2
+            if initial:
+                pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
+                xoffset = 0
+                yoffset = 0
+                lastX = display[0] / 2
+                lastY = display[1] / 2
 
-            initial = False
-            oldV = Mat4x4()
-        else:  
-            xoffset = xpos - lastX
-            yoffset = ypos - lastY
-            lastX = xpos
-            lastY = ypos 
-        #xoffset, yoffset = pygame.mouse.get_rel()
+                initial = False
+            else:  
+                xoffset = xpos - lastX
+                yoffset = ypos - lastY
+                lastX = xpos
+                lastY = ypos
+        else:
+            xoffset = 0.0
+            yoffset = 0.0
         sensitivity = 0.3
         xoffset *= sensitivity
         yoffset *= -1
@@ -517,6 +478,22 @@ def main():
         #glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewList)
         #print(cameraSpeed)
         focus += delta
+        #print(focus)
+        if setOrigin:
+            focus = origin
+            pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
+            lastX = display[0] / 2
+            lastY = display[1] / 2
+            newFocus = False
+            setOrigin = False
+        if center:
+            pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
+            focus = Vec3(closest_point[0], closest_point[1], closest_point[2])
+            #focus = closest_point
+            lastX = display[0] / 2
+            lastY = display[1] / 2
+            center = False
+            newFocus = True
         cameraPos += delta + delta2
         #print(cameraPos)
         camFocus = cameraPos - focus
@@ -532,27 +509,28 @@ def main():
         cf = np.matmul(r, cf.T)
         cf = Vec3(cf[0], cf[1], cf[2])
         new_cameraPos = cf + focus
+
+        #Set View Matrix
+        view = Mat4x4()
         view = lookAt(new_cameraPos, focus, up)
         cameraPos = new_cameraPos
         viewList = convert(view)
-        viewLoc = glGetUniformLocation(shader, "view")
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewList)
+        myshader.setViewMatrix(viewList)
 
         #Projection
-        projection = Mat4x4()
         fov += fovdelta
         if fov <= 1.0:
             fov = 1.0
             print ("MAX ZOOM REACHED")
         if fov >= 45.0:
             fov = 45.0
+        projection = Mat4x4()
         projection = perspective(fov, aspect, 0.1, 100)
         projectionList = convert(projection)
-        projectionLoc = glGetUniformLocation(shader, "projection")
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionList)
+        myshader.setProjectionMatrix(projectionList)
+
+        #Rendering
         glBindVertexArray(myvao)
-        #glPointSize(20.0)
         glDrawArrays(GL_POINTS,0,numpos)
-        #glDrawElements(GL_POINTS, 3 , GL_UNSIGNED_INT, 0)
         pygame.display.flip()
 main()
