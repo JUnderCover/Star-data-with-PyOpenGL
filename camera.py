@@ -36,7 +36,17 @@ class Camera(object):
         worldUp = np.array([0.0,1.0,0.0])
         self.right = np.cross(self.normCamFocus, worldUp)
         self.up = np.cross(self.right, self.normCamFocus)
-        
+
+    def translate(self, delta, delta2):
+        #delta: left and right translation
+        #delta2: foward/back translation
+        worldUp = np.array([0.0,1.0,0.0])
+        self.focus += delta
+        self.pos += delta + delta2
+        self.camFocus = self.pos - self.focus
+        self.normCamFocus = self.camFocus /np.linalg.norm(self.camFocus)
+        self.right = np.cross(self.normCamFocus, worldUp)
+        self = np.cross(self.right, self.normCamFocus)
     #Matrix methods derived from glm library by Mack Stone
     #See https://github.com/mackst/glm/tree/master/glm
     @staticmethod
@@ -80,3 +90,19 @@ class Camera(object):
         Result[3][1] = -1 * np.dot(u, eye)
         Result[3][2] = np.dot(f, eye)
         return Result
+
+    @staticmethod
+    def perspectiveMatrix(fovy, aspect, zNear, zFar):
+        assert(aspect != 0)
+        assert(zFar != zNear)
+
+        rad = math.radians(fovy)
+        tanHalfFovy = math.tan((rad / 2))
+
+        result = np.zeros((4,4))
+        result[0][0] = 1. / (aspect * tanHalfFovy)
+        result[1][1] = 1. / tanHalfFovy
+        result[2][2] = -(zFar + zNear) / (zFar - zNear)
+        result[2][3] = -1.
+        result[3][2] = -(2. * zFar * zNear) / (zFar - zNear)
+        return result
