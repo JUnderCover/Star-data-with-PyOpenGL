@@ -20,6 +20,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from shader import Shader
+from camera import Camera
 
 # import yt
 # yt.enable_plugins()
@@ -203,6 +204,7 @@ def main():
     model = Mat4x4()
     
     #Look at Vectors
+    mycamera = Camera()
     worldUp = Vec3(0.0, 1.0, 0.0)
     origin = Vec3(0.0, 0.0, 0.0)
     cameraPos = Vec3(0.0, 0.0, 5.0)
@@ -216,7 +218,8 @@ def main():
     up = cross(right, cameraFront) #normalized internally
     delta = 0.0
     delta2 = 0.0
-    d = 0.0
+    ddelta = 0.0
+    ddelta2 = 0.0
     fovdelta = 0.0
     pygame.mouse.set_visible(True)
     pygame.event.set_grab(True)
@@ -308,7 +311,8 @@ def main():
                     up = cross(right, cameraFront) #normalized internally    
                     delta = 0.0
                     delta2 = 0.0
-                    d = 0.0
+                    ddelta = 0.0
+                    ddelta2 = 0.0
                     fovdelta = 0.0
                     middle = False
                     select = False
@@ -338,36 +342,41 @@ def main():
                     quit()
                 if event.key == pygame.K_LEFT:
                     delta = right * 0.01
+
+                    ddelta = mycamera.right * 0.01
                     #delta = cross(cameraFront, up) * cameraSpeed * -1
                     #cameraPos -= cross(cameraFront, up) * cameraSpeed
                 if event.key == pygame.K_RIGHT:
                     delta = right * 0.01 * -1
+
+                    ddelta = mycamera.right * 0.01 * -1
                     #delta = cross(cameraFront, up) * cameraSpeed
                     #cameraPos += cross(cameraFront, up) * cameraSpeed
                 if event.key == pygame.K_UP:
-                    cf = np.array([camFocus.x, camFocus.y, camFocus.z])
-                    d = np.linalg.norm(cf)
-                    delta2= 0.01 * -1 * camFocus 
+                    delta2= 0.01 * -1 * camFocus
+
+                    ddelta2 = 0.01 * -1 * mycamera.camFocus
                     #delta = cameraSpeed * cameraFront
                     #cameraPos += cameraSpeed * cameraFront
                 if event.key == pygame.K_DOWN:
-                    d = 0.01 * -1
                     delta2= 0.01 * camFocus
+
+                    ddelta2 = 0.01 * mycamera.camFocus
                     #delta = cameraSpeed * cameraFront * -1
                     #cameraPos -= cameraSpeed * cameraFront
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
-                    #print(delta)
                     delta = Vec3(0.0, 0.0, 0.0)
+                    ddelta = np.array([0.0, 0.0, 0.0])
                 if event.key == pygame.K_RIGHT:
-                    #print(delta)
                     delta = Vec3(0.0, 0.0, 0.0)
+                    ddelta = np.array([0.0, 0.0, 0.0])
                 if event.key == pygame.K_UP:
-                    d = 0.0
                     delta2 = Vec3(0.0, 0.0, 0.0)
+                    ddelta2 = np.array([0.0, 0.0, 0.0])
                 if event.key == pygame.K_DOWN:
-                    d = 0.0
                     delta2 = Vec3(0.0, 0.0, 0.0)
+                    ddelta2 = np.array([0.0, 0.0, 0.0])
         glClear(GL_COLOR_BUFFER_BIT)
         #glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         myshader.use()
@@ -456,30 +465,16 @@ def main():
             pitch = maxAngle
         if pitch < maxAngle * -1:
             pitch = maxAngle * -1
-        #cameraPos += delta
-        #cameraPos = cameraPos + (d * cameraFront)
         frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
         frontY = math.sin(math.radians(pitch))
-        frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
-        #cameraFront = Vec3(frontX, frontY, frontZ)
-        
-        #cameraFront = near - cameraPos
-
-        
-        # print(near)
-        # print(loc)
-        #cameraFront = normalizeVec(cameraFront)
-        #right = cross(cameraFront, worldUp) #normalized
-        #up = cross(right, cameraFront)
-        # # view = lookAt(cameraPos, normalizeVec(near), up)
-        #view = lookAt(cameraPos, cameraPos + cameraFront, up)
-        #viewList = convert(view)
-        #viewLoc = glGetUniformLocation(shader, "view")
-        #glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewList)
-        #print(cameraSpeed)
+        frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))                                                                                                          
+       
         focus += delta
-        #print(focus)
+        cameraPos += delta + delta2
+        mycamera.focus += ddelta
+        mycamera.pos += ddelta + ddelta2
         if setOrigin:
+            mycamera.focus = np.array([0.0, 0.0, 0.0])
             focus = origin
             pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
             lastX = display[0] / 2
@@ -489,17 +484,30 @@ def main():
         if center:
             pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
             focus = Vec3(closest_point[0], closest_point[1], closest_point[2])
-            #focus = closest_point
+            mycamera.focus = closest_point
             lastX = display[0] / 2
             lastY = display[1] / 2
             center = False
             newFocus = True
-        cameraPos += delta + delta2
-        #print(cameraPos)
+        mycamera.camFocus = mycamera.pos - mycamera.focus
+        mycamera.normCamFocus = mycamera.camFocus /np.linalg.norm(mycamera.camFocus)
+        mycamera.right = np.cross(mycamera.normCamFocus, worldUp)
+        mycamera.up = np.cross(mycamera.right, mycamera.normCamFocus)
+        r1 = Camera.rotationMatrix(yaw, mycamera.up)
+        r2 = Camera.rotationMatrix(pitch, mycamera.right)
+        rot = np.matmul(r2, r1)
+        cf = np.append(mycamera.camFocus , 1)
+        cf = np.matmul(rot, cf.T)
+        cf = cf[0:3]  # drop appended 4th. element
+        mycamera.pos = cf + mycamera.focus
+        view = Camera.lookatMatrix(mycamera.pos, mycamera.focus, mycamera.up)
+        #print(view)
+        myshader.setViewMatrix(view)
+        
         camFocus = cameraPos - focus
         right = cross(normalizeVec(camFocus), worldUp)
-        #print(focus)
         up = cross(right, normalizeVec(camFocus))
+        
         r = Mat4x4()
         r = rotate(r, yaw, up)
         r = rotate(r, pitch, right)
@@ -515,7 +523,8 @@ def main():
         view = lookAt(new_cameraPos, focus, up)
         cameraPos = new_cameraPos
         viewList = convert(view)
-        myshader.setViewMatrix(viewList)
+        #print(viewList)
+        #myshader.setViewMatrix(viewList)
 
         #Projection
         fov += fovdelta
