@@ -51,43 +51,6 @@ def getPoint(near, far, point):
     q = near + ray * t
     return q
 
-def convertnp(matrix):
-    vecList = matrix._Mat4x4__value
-    m = np.zeros((4,4))
-    trans = []
-    for i, vec in enumerate(vecList):
-        m[i,0] = vec.x
-        m[i,1] = vec.y
-        m[i,2] = vec.z
-        m[i,3] = vec.w
-        #trans.append(vec.x)
-        #trans.append(vec.y)
-        #trans.append(vec.z)
-        #trans.append(vec.w)
-    return m
-
-
-
-
-def convert(matrix):
-    vecList = matrix._Mat4x4__value
-    trans = []
-    for vec in vecList:
-        trans.append(vec.x)
-        trans.append(vec.y)
-        trans.append(vec.z)
-        trans.append(vec.w)
-    return trans
-
-def convertXY(x, y, ballradius):
-    d = x * x + y * y
-    radiusSquared = ballradius * ballradius
-    if (d > radiusSquared):
-        return Vec3(x, y, 0.0)
-    else:
-        return Vec3(x, y, math.sqrt(radiusSquared - d))
-
-
 
 def main():
     # positions = []
@@ -188,14 +151,17 @@ def main():
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
     deltaTime = 0.0
     lastFrame = 0.0
-    
-    #yaw = -90.0
+
+    #Look at Variables
     yaw = 0.0
     pitch = 0.0
     xoffset = 0.0
     yoffset = 0.0
     lastX = display[0] / 2
     lastY = display[1] / 2
+    frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
+    frontY = math.sin(math.radians(pitch))
+    frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
 
     #Initialize matrix:
     fov = 45.0
@@ -205,29 +171,19 @@ def main():
     view = np.diag([1.0,1.0,1.0,1.0])
     model = np.diag([1.0,1.0,1.0,1.0])
     
-    #Look at Vectors
+    #Camera
     mycamera = Camera()
-    worldUp = Vec3(0.0, 1.0, 0.0)
-    origin = Vec3(0.0, 0.0, 0.0)
-    cameraPos = Vec3(0.0, 0.0, 5.0)
-    focus = Vec3(0.0, 0.0, 0.0)
-    frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-    frontY = math.sin(math.radians(pitch))
-    frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
-    cameraFront = Vec3(frontX, frontY, frontZ)
-    cameraFront = normalizeVec(cameraFront)
-    right = cross(cameraFront, worldUp)
-    up = cross(right, cameraFront) #normalized internally
+    #Deltas
     delta = 0.0
     delta2 = 0.0
     fovdelta = 0.0
+    #Booleans
     pygame.mouse.set_visible(True)
     pygame.event.set_grab(True)
     middle = False
     select = False
     center = False
     rotate_mode = True
-
     setOrigin = False
     newFocus = False
 
@@ -275,6 +231,16 @@ def main():
                 if event.button == 2:
                     middle = True
                 if event.button == 3: #Right Click
+                    #Look at Variables
+                    yaw = 0.0
+                    pitch = 0.0
+                    xoffset = 0.0
+                    yoffset = 0.0
+                    lastX = display[0] / 2
+                    lastY = display[1] / 2
+                    frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
+                    frontY = math.sin(math.radians(pitch))
+                    frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
                     #Reset initial conditions
                     deltaTime = 0.0
                     lastFrame = 0.0
@@ -387,8 +353,8 @@ def main():
         dist = np.linalg.norm(q - pos, axis = 1)
         mindist = np.min(dist)
         closest_point = pos[np.argmin(dist), :]
-        diff = cameraPos - focus
-        cameraToFocus = np.linalg.norm(np.array([diff.x, diff.y, diff.z]))
+        diff = mycamera.pos - mycamera.focus
+        cameraToFocus = np.linalg.norm(np.array([diff[0], diff[1], diff[2]]))
         thresh = 0.004 * cameraToFocus
         if(mindist < thresh):
             pygame.mouse.set_cursor(*pygame.cursors.diamond)
@@ -438,9 +404,9 @@ def main():
             pitch = maxAngle
         if pitch < maxAngle * -1:
             pitch = maxAngle * -1
-        frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-        frontY = math.sin(math.radians(pitch))
-        frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
+        #frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
+        #frontY = math.sin(math.radians(pitch))
+        #frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
         
         mycamera.focus += delta
         mycamera.pos += delta + delta2
