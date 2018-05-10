@@ -149,9 +149,7 @@ def main():
     print (width, height)
     img_data = numpy.array(list(image.getdata()), numpy.uint8)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
-    deltaTime = 0.0
-    lastFrame = 0.0
-
+    
     #Look at Variables
     yaw = 0.0
     pitch = 0.0
@@ -159,9 +157,6 @@ def main():
     yoffset = 0.0
     lastX = display[0] / 2
     lastY = display[1] / 2
-    frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-    frontY = math.sin(math.radians(pitch))
-    frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
 
     #Initialize matrix:
     fov = 45.0
@@ -186,6 +181,7 @@ def main():
     rotate_mode = True
     setOrigin = False
     newFocus = False
+    initial = True
 
     #glEnable(GL_DEPTH_TEST)
     glEnable(GL_BLEND)
@@ -193,17 +189,8 @@ def main():
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_COLOR)
     #glBlendFunc(GL_SRC_ALPHA, GL_ZERO)
 
-    initial = True
-
-    xoffset = 0.0
-    yoffset = 0.0
     
     while True:
-        timeValue = pygame.time.get_ticks()
-        deltaTime = timeValue - lastFrame
-        lastFrame = timeValue
-        cameraSpeed = 0.009 * deltaTime
-        #cameraSpeed = 0.2
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -238,62 +225,29 @@ def main():
                     yoffset = 0.0
                     lastX = display[0] / 2
                     lastY = display[1] / 2
-                    frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-                    frontY = math.sin(math.radians(pitch))
-                    frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
-                    #Reset initial conditions
-                    deltaTime = 0.0
-                    lastFrame = 0.0
 
-                    initial = True
-                    #yaw = -90.0
-                    yaw = 0.0
-                    pitch = 0.0
-                    xoffset = 0.0
-                    yoffset = 0.0
-                    lastX = display[0] /  2
-                    lastY = display[1] / 2
+                    #Initialize matrix:
                     fov = 45.0
+                    projection = Camera.perspectiveMatrix(fov, aspect, zNear, zFar)
+                    view = np.diag([1.0,1.0,1.0,1.0])
+                    model = np.diag([1.0,1.0,1.0,1.0])
 
-                    projection = perspective(fov, aspect, 0.1, 100)
-                    view = Mat4x4()
-                    model = Mat4x4()
-
-
-                    #Look at Vectors
-                    worldUp = Vec3(0.0, 1.0, 0.0)
-                    origin = Vec3(0.0, 0.0, 0.0)
-                    cameraPos = Vec3(0.0, 0.0, 5.0)
-                    focus = Vec3(0.0, 0.0, 0.0)
-                    frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-                    frontY = math.sin(math.radians(pitch))
-                    frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
-                    cameraFront = Vec3(frontX, frontY, frontZ)
-                    cameraFront = normalizeVec(cameraFront)
-                    right = cross(cameraFront, worldUp)
-                    up = cross(right, cameraFront) #normalized internally    
+                    #Camera
+                    mycamera = Camera()
+                    #Deltas
                     delta = 0.0
                     delta2 = 0.0
-                    ddelta = 0.0
-                    ddelta2 = 0.0
                     fovdelta = 0.0
+                    #Booleans
+                    pygame.mouse.set_visible(True)
+                    pygame.event.set_grab(True)
                     middle = False
                     select = False
-                    rotate_mode = True
                     center = False
-                    initial = True
+                    rotate_mode = True
                     setOrigin = False
                     newFocus = False
-                    model = Mat4x4()
-                    newmodel = Mat4x4()
-                    oldmodel = Mat4x4()
-
-                    xoffset = 0.0
-                    yoffset = 0.0
-                    
-                    #Right Click to exit
-                    #pygame.quit()
-                    #quit()
+                    initial = True
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 2:
                     middle = False
@@ -404,15 +358,11 @@ def main():
             pitch = maxAngle
         if pitch < maxAngle * -1:
             pitch = maxAngle * -1
-        #frontX = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-        #frontY = math.sin(math.radians(pitch))
-        #frontZ = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
-        
+            
         mycamera.focus += delta
         mycamera.pos += delta + delta2
         if setOrigin:
             mycamera.focus = np.array([0.0, 0.0, 0.0])
-            focus = origin
             pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
             lastX = display[0] / 2
             lastY = display[1] / 2
@@ -420,7 +370,6 @@ def main():
             setOrigin = False
         if center:
             pygame.mouse.set_pos(display[0] / 2, display[1] / 2)
-            focus = Vec3(closest_point[0], closest_point[1], closest_point[2])
             mycamera.focus = closest_point
             lastX = display[0] / 2
             lastY = display[1] / 2
