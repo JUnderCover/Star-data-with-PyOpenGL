@@ -200,7 +200,8 @@ def main():
 
     #Initialize matrix:
     projection = perspective(fov, aspect, 0.1, 100)
-    view = Mat4x4()
+    #view = Mat4x4()
+    view = np.diag([1.0,1.0,1.0,1.0])
     model = Mat4x4()
     
     #Look at Vectors
@@ -394,8 +395,8 @@ def main():
         #viewport = np.zeros((4, 1))
         viewport = np.array(glGetIntegerv( GL_VIEWPORT))
         m = convertnp(model)
-        v = convertnp(view)
-        mv = np.matmul(v, m)
+        #v = convertnp(view)
+        mv = np.matmul(view, m)
         p = convertnp(projection)
         xyz_n = np.array(gluUnProject(xpos, ypos, 0.0, mv, p, viewport))
         xyz_f = np.array(gluUnProject(xpos, ypos, 1.0, mv, p, viewport))
@@ -519,11 +520,10 @@ def main():
         new_cameraPos = cf + focus
 
         #Set View Matrix
-        view = Mat4x4()
-        view = lookAt(new_cameraPos, focus, up)
-        cameraPos = new_cameraPos
-        viewList = convert(view)
-        #print(viewList)
+        #view = Mat4x4()
+        #view = lookAt(new_cameraPos, focus, up)
+        #cameraPos = new_cameraPos
+        #viewList = convert(view)
         #myshader.setViewMatrix(viewList)
 
         #Projection
