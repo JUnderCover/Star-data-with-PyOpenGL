@@ -2,7 +2,6 @@ import pygame
 import random
 import numpy
 import numpy as np
-from numpy.linalg import inv
 import math
 import sys
 import matplotlib.cm as cm
@@ -10,11 +9,7 @@ import matplotlib as mpl
 from ctypes import *
 from PIL import Image
 
-from glm.gtc.matrix_transform import *
-from glm.detail.type_vec4 import *
-from glm.detail.type_mat4x4 import *
 
-import OpenGL.GL.shaders
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -103,9 +98,7 @@ def main():
 
 
 
-    
     pygame.init()
-    #pygame.mouse.set_cursor(*pygame.cursors.diamond)
     display = (1000, 800)
     #display = (800, 600)
     aspect = display[0] / display [1]    
@@ -150,6 +143,9 @@ def main():
     img_data = numpy.array(list(image.getdata()), numpy.uint8)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
     
+    #Camera
+    mycamera = Camera()
+    
     #Look at Variables
     yaw = 0.0
     pitch = 0.0
@@ -159,15 +155,12 @@ def main():
     lastY = display[1] / 2
 
     #Initialize matrix:
-    fov = 45.0
     zNear = 0.1
     zFar = 100
-    projection = Camera.perspectiveMatrix(fov, aspect, zNear, zFar)
+    projection = Camera.perspectiveMatrix(mycamera.fov, aspect, zNear, zFar)
     view = np.diag([1.0,1.0,1.0,1.0])
     model = np.diag([1.0,1.0,1.0,1.0])
     
-    #Camera
-    mycamera = Camera()
     #Deltas
     delta = 0.0
     delta2 = 0.0
@@ -217,7 +210,10 @@ def main():
                         fovdelta = 0.2
                 if event.button == 2:
                     middle = True
-                if event.button == 3: #Right Click
+                if event.button == 3: #Right Click to Reset
+                    #Camera
+                    mycamera = Camera()
+                    
                     #Look at Variables
                     yaw = 0.0
                     pitch = 0.0
@@ -227,13 +223,10 @@ def main():
                     lastY = display[1] / 2
 
                     #Initialize matrix:
-                    fov = 45.0
-                    projection = Camera.perspectiveMatrix(fov, aspect, zNear, zFar)
+                    projection = Camera.perspectiveMatrix(mycamera.fov, aspect, zNear, zFar)
                     view = np.diag([1.0,1.0,1.0,1.0])
                     model = np.diag([1.0,1.0,1.0,1.0])
 
-                    #Camera
-                    mycamera = Camera()
                     #Deltas
                     delta = 0.0
                     delta2 = 0.0
@@ -254,7 +247,7 @@ def main():
                     print("DONE")
                     fovdelta = 0
             if event.type == pygame.KEYDOWN:
-                if event.key == K_q:
+                if event.key == K_q: #Q to Quit
                     pygame.quit()
                     quit()
                 if event.key == pygame.K_LEFT:
@@ -262,9 +255,9 @@ def main():
                 if event.key == pygame.K_RIGHT:
                     delta = mycamera.right * 0.01 * -1
                 if event.key == pygame.K_UP:
-                    delta2 = 0.01 * -1 * mycamera.camFocus
+                    delta2 = 0.005 * -1 * mycamera.camFocus
                 if event.key == pygame.K_DOWN:
-                    delta2 = 0.01 * mycamera.camFocus
+                    delta2 = 0.005 * mycamera.camFocus
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     delta = np.array([0.0, 0.0, 0.0])
@@ -277,7 +270,6 @@ def main():
         glClear(GL_COLOR_BUFFER_BIT)
         #glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         myshader.use()
-        #glUseProgram(shader)
         glBindTexture(GL_TEXTURE_2D, textureobject)
 
 
@@ -286,9 +278,6 @@ def main():
         #OpenGL Viewport, lower left is (0,0)
         #In Window Coordinates top left is (0,0)
         ypos = display[1] - ypos
-        #xpos = (xpos - (display[0] / 2))
-        #ypos = ((display[1] / 2) - ypos)
-        #viewport = np.zeros((4, 1))
         viewport = np.array(glGetIntegerv( GL_VIEWPORT))
         mv = np.matmul(view, model)
         xyz_n = np.array(gluUnProject(xpos, ypos, 0.0, mv, projection, viewport))
@@ -386,14 +375,14 @@ def main():
         view = Camera.lookatMatrix(mycamera.pos, mycamera.focus, mycamera.up)
         myshader.setViewMatrix(view)
         
-        #Projection
-        fov += fovdelta
-        if fov <= 1.0:
-            fov = 1.0
+        #Projection Matrix
+        mycamera.fov += fovdelta
+        if mycamera.fov <= 1.0:
+            mycamera.fov = 1.0
             print ("MAX ZOOM REACHED")
-        if fov >= 45.0:
-            fov = 45.0
-        projection = Camera.perspectiveMatrix(fov, aspect, 0.1, 100)
+        if mycamera.fov >= 45.0:
+            mycamera.fov = 45.0
+        projection = Camera.perspectiveMatrix(mycamera.fov, aspect, 0.1, 100)
         myshader.setProjectionMatrix(projection)
         
         #Rendering

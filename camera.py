@@ -28,14 +28,15 @@
 import numpy as np
 import math
 class Camera(object):
-    def __init__(self, pos=np.array([0.0,0.0,5.0])):
+    def __init__(self, pos=np.array([0.0,0.0,5.0]), fov=45):
         self.pos = pos
         self.focus = np.array([0.0,0.0,0.0])
         self.camFocus = self.pos - self.focus
-        self.normCamFocus = self.camFocus /np.linalg.norm(self.camFocus)
+        self.normCamFocus = self.camFocus / np.linalg.norm(self.camFocus)
         worldUp = np.array([0.0,1.0,0.0])
         self.right = np.cross(self.normCamFocus, worldUp)
         self.up = np.cross(self.right, self.normCamFocus)
+        self.fov = fov
 
     def translate(self, delta, delta2):
         #delta: left and right translation
@@ -49,6 +50,7 @@ class Camera(object):
         self = np.cross(self.right, self.normCamFocus)
     #Matrix methods derived from glm library by Mack Stone
     #See https://github.com/mackst/glm/tree/master/glm
+
     @staticmethod
     def rotationMatrix(angle, axis):
         rmat = np.zeros((4,4))
