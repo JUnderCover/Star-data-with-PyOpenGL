@@ -58,13 +58,6 @@ def main():
     
     data = np.loadtxt('p2data_v2.txt', dtype=np.float32)
     data[:, 0:3] = (data[:, 0:3] - 0.5) * 2
-    #Fake Point
-    data[0,0] = -0.2
-    data[0,1] = 0.1
-    data[0,2] = -1.0
-    myp = np.array([data[0,0], data[0,1], data[0,2]])
-    data[0,4] = 900
-    #End Fake Point
     pos = data[:, 0:3]
     norm = mpl.colors.Normalize(vmin=1, vmax=1000)
     data = np.append(data, cm.bwr(norm(data[:,4])), axis=1)
