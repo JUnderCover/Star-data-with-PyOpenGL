@@ -1,9 +1,5 @@
 import pygame
-import random
-import numpy
 import numpy as np
-import math
-import sys
 import matplotlib.cm as cm
 import matplotlib as mpl
 from ctypes import *
@@ -48,14 +44,6 @@ def getPoint(near, far, point):
 
 
 def main():
-    # positions = []
-    # myfile = open("p2data.txt", "r")
-    # for line in myfile:
-    #     positions.append((float(line[2:12]) - 0.5) * 2)
-    #     positions.append((float(line[14:24]) - 0.5) * 2)
-    #     positions.append((float(line[26:36]) - 0.5) * 2)
-    # positions = np.array(positions, dtype=np.float32)
-    
     data = np.loadtxt('p2data_v2.txt', dtype=np.float32)
     data[:, 0:3] = (data[:, 0:3] - 0.5) * 2
     pos = data[:, 0:3]
@@ -65,17 +53,13 @@ def main():
     mass = size0 * np.sqrt(data[:, 3] / 30000)
     mass = mass.reshape(mass.shape[0], 1)
     mass = np.maximum(mass, 1)
-    mass[0] = 20
     data = np.delete(data, 3, 1)  # drop mass
     data = np.delete(data, 3, 1)  # drop age
     data = np.delete(data, 6, 1)  # drop Alpha
-    #m = np.ones((data.shape[0], 1))
-    #m = m * 80.0
-    #m[0::2] = 20.0
-    data = numpy.hstack((data, mass))
-    data = data.astype(numpy.float32)
+    data = np.hstack((data, mass))
+    data = data.astype(np.float32)
 
-    #yt region
+    #Uncomment if Using yt
     # norm = mpl.colors.Normalize(vmin=1, vmax=1000)
     # colors = cm.bwr(norm(age))
     # colors = colors[:, 0:-1]
@@ -87,16 +71,11 @@ def main():
     # data = np.hstack((position, colors, m))
     # data = data.astype(np.float32)
 
-    
-
-
-
     pygame.init()
     display = (1000, 800)
     #display = (800, 600)
-    aspect = display[0] / display [1]    
-    pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
-
+    aspect = display[0] / display [1]
+    screen = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
     #Initialize VAO an VBO
     myvao = glGenVertexArrays(1)
     glBindVertexArray(myvao)
@@ -104,7 +83,7 @@ def main():
     glBindBuffer(GL_ARRAY_BUFFER, myvbo)
     floatsize = 4  # 4 bytes, 32 bits
     size = floatsize * data.size
-    glBufferData(GL_ARRAY_BUFFER, size, numpy.ravel(data), GL_STATIC_DRAW)
+    glBufferData(GL_ARRAY_BUFFER, size, np.ravel(data), GL_STATIC_DRAW)
     glEnable(GL_PROGRAM_POINT_SIZE)
 
     #Shader Compilation, Attributes and set stride
@@ -121,7 +100,6 @@ def main():
     numpos = int(data.shape[0])
 
 
-
     glEnable(GL_POINT_SPRITE)
     #texture
     textureobject = glGenTextures(1)
@@ -133,7 +111,7 @@ def main():
     image = Image.open("halo.jpg")
     width, height = image.size
     print (width, height)
-    img_data = numpy.array(list(image.getdata()), numpy.uint8)
+    img_data = np.array(list(image.getdata()), np.uint8)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
     
     #Camera
@@ -174,8 +152,6 @@ def main():
     #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_COLOR)
     #glBlendFunc(GL_SRC_ALPHA, GL_ZERO)
-
-    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -264,8 +240,7 @@ def main():
         #glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         myshader.use()
         glBindTexture(GL_TEXTURE_2D, textureobject)
-
-
+        
         #Ray Tracing
         xpos, ypos = pygame.mouse.get_pos()
         #OpenGL Viewport, lower left is (0,0)
@@ -377,7 +352,6 @@ def main():
             mycamera.fov = 45.0
         projection = Camera.perspectiveMatrix(mycamera.fov, aspect, 0.1, 100)
         myshader.setProjectionMatrix(projection)
-        
         #Rendering
         glBindVertexArray(myvao)
         glDrawArrays(GL_POINTS,0,numpos)
