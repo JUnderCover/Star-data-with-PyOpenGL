@@ -4,12 +4,12 @@ One Paragraph of project description goes here
 
 ## Getting Started
 
-*R: Toggle rotate mode on and off
-*O: Switch camera focus to origin
-*Q: quit
-*Press Mouse Wheel and Scroll: Zooming in and out. Scrolling the mouse wheel alone will do nothing 
-*Left Click(when cursor is diamond): change camera focus to selected point
-*Right Click: Reset to initial view
+* R: Toggle rotate mode on and off
+* O: Switch camera focus to origin
+* Q: quit
+* Press Mouse Wheel and Scroll: Zooming in and out. Scrolling the mouse wheel alone will do nothing 
+* Left Click(when cursor is diamond): change camera focus to selected point
+* Right Click: Reset to initial view
 
 ### Prerequisites
 
