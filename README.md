@@ -72,4 +72,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-Very useful Modern OpenGL tutorials by Joey de Vries: [I'm an inline-style link] https://learnopengl.com/
+Very useful Modern OpenGL tutorials by Joey de Vries: [I'm an inline-style link] (https://learnopengl.com/)
