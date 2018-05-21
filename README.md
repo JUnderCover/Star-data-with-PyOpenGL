@@ -4,7 +4,12 @@ One Paragraph of project description goes here
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+*R: Toggle rotate mode on and off
+*O: Switch camera focus to origin
+*Q: quit
+*Press Mouse Wheel and Scroll: Zooming in and out. Scrolling the mouse wheel alone will do nothing 
+*Left Click(when cursor is diamond): change camera focus to selected point
+*Right Click: Reset to initial view
 
 ### Prerequisites
 
@@ -73,3 +78,10 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Acknowledgments
 
 Very useful Modern OpenGL tutorials by Joey de Vries: https://learnopengl.com/
+
+Matrix methods derived from: https://github.com/mackst/glm/tree/master/glm
+
+Camera translation and rotation explaination: https://gamedev.stackexchange.com/questions/20758/how-can-i-orbit-a-camera-about-its-target-point
+
+Mouse selection explaination: https://www.bfilipek.com/2012/06/select-mouse-opengl.html
+
