@@ -13,6 +13,7 @@ from OpenGL.GLU import *
 from shader import Shader
 from camera import Camera
 
+#Uncomment if using yt (1/2)
 # import yt
 # yt.enable_plugins()
 
@@ -59,7 +60,7 @@ def main():
     data = np.hstack((data, mass))
     data = data.astype(np.float32)
 
-    #Uncomment if Using yt
+    # #Uncomment if Using yt (2/2)
     # norm = mpl.colors.Normalize(vmin=1, vmax=1000)
     # colors = cm.bwr(norm(age))
     # colors = colors[:, 0:-1]
@@ -70,7 +71,8 @@ def main():
     # m = m.reshape(m.shape[0], 1)
     # data = np.hstack((position, colors, m))
     # data = data.astype(np.float32)
-
+    # pos = data[:, 0:3]
+    
     pygame.init()
     display = (1000, 800)
     #display = (800, 600)
