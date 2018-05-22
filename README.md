@@ -4,16 +4,16 @@ This app renders star data using OpenGL and has basic naviation features. All re
 
 All data is in p2data_v2.txt. Data was provided by Dr. John Wise of Georgia Tech.  
 
-## Controls
+### Controls
 
-* _Mouse Movement_: Rotates the entire scene and moves cursor
-* _R_: Toggle rotate mode on and off. When off, one can move the cursor without rotating the scene. 
-* _O_: Switch camera focus to origin
-* _Q_: Quit and close window
+* _Mouse Movement_: Rotates the entire scene and moves cursor.
+* _R_: Toggle rotate mode on and off. When off, one can move the cursor without rotating the scene.
+* _O_: Switch camera focus to origin.
+* _Q_: Quit and close window.
 * _Press Mouse Wheel and Scroll_: Zooming in and out. Scrolling the mouse wheel alone will do nothing.
 * _Arrow Keys_: Translate camera foward, backward, left or right.
-* _Left Click (when cursor is diamond)_: change camera focus to selected point
-* _Right Click_: Reset to initial view
+* _Left Click (when cursor is diamond)_: change camera focus to selected point.
+* _Right Click_: Reset to initial view.
 
 
 ### Installing
@@ -46,7 +46,7 @@ to something like
 
 ### Issues
 
-Pygame and PyOpenGL have certain compatability issues. Trying to use pygame blit will not work. See https://stackoverflow.com/questions/40207529/blitting-pygame-surface-onto-pygame-opengl-display
+Pygame and PyOpenGL have certain compatability issues. Pygame blit will not work. See https://stackoverflow.com/questions/40207529/blitting-pygame-surface-onto-pygame-opengl-display
 
 
 ## Acknowledgments
