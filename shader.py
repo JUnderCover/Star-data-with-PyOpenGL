@@ -36,4 +36,6 @@ class Shader(object):
     def setProjectionMatrix(self, projection):
         projectionLoc = glGetUniformLocation(self.__shader, "projection")
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projection)
-        
+
+if __name__ == "__main__":
+    print("Trying to run Shader class definition?!") 

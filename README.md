@@ -1,41 +1,37 @@
 # PyOpenGL
 
-One Paragraph of project description goes here
+This app renders star data using OpenGL and has basic naviation features. All rendering is done via the Modern OpenGL approach with custom defined vertex and fragment shaders. All matrix calculations are done via numpy and numpy arrays are passed directly into OpenGL functions.
 
-## Getting Started
+## Controls
 
-* R: Toggle rotate mode on and off
-* O: Switch camera focus to origin
-* Q: quit
-* Press Mouse Wheel and Scroll: Zooming in and out. Scrolling the mouse wheel alone will do nothing 
-* Left Click(when cursor is diamond): change camera focus to selected point
-* Right Click: Reset to initial view
+* _Mouse Movement_: Rotates the entire scene and moves cursor
+* _R_: Toggle rotate mode on and off. When off, one can move the cursor without rotating the scene. 
+* _O_: Switch camera focus to origin
+* _Q_: Quit and close window
+* _Press Mouse Wheel and Scroll_: Zooming in and out. Scrolling the mouse wheel alone will do nothing.
+* _Arrow Keys_: Translate camera foward, backward, left or right.
+* _Left Click (when cursor is diamond)_: change camera focus to selected point
+* _Right Click_: Reset to initial view
 
-### Prerequisites
-
-What things you need to install the software and how to install them
-
-```
-Give examples
-```
 
 ### Installing
 
-A step by step series of examples that tell you have to get a development env running
+See requirements.txt or PipFile for the required packages. If shader compilation fails due to incorrect GLSL version, try the following. 
 
-Say what the step will be
 
-```
-Give the example
-```
-
-And repeat
+At the top of **both** vertexshader.glsl and fragmentshader.glsl, change:
 
 ```
-until finished
+#version 440
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+to something like
+
+```
+#version 130
+```
+
+...or which ever GLSL version is support on your machine. 
 
 ## Running the tests
 

@@ -358,4 +358,5 @@ def main():
         pygame.display.flip()
 
 
-main()
+if __name__ == "__main__":
+    main()
