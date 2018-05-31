@@ -18,7 +18,7 @@ All data is in p2data_v2.txt. Data was provided by Dr. John Wise of Georgia Tech
 
 ### Installing
 
-See requirements.txt or PipFile for the required packages. Note that the installation of yt is optional. Code was developed with Python 3.6, but should be compatible with Python 2. 
+See requirements.txt or PipFile for the required packages. Note that the installation of yt is optional (consider removing it from PipFile). Code was developed with Python 3.6, but should be compatible with Python 2. 
 
 To create scene run:
 
@@ -46,7 +46,17 @@ to something like
 
 ### Issues
 
-Pygame and PyOpenGL have certain compatability issues. Pygame blit will not work. See https://stackoverflow.com/questions/40207529/blitting-pygame-surface-onto-pygame-opengl-display
+Pygame and PyOpenGL have certain compatability issues. Pygame blit will not work. See https://stackoverflow.com/questions/40207529/blitting-pygame-surface-onto-pygame-opengl-display. This makes displaying text and other basic shapes with Pygame rather non-trivial.
+
+
+Running render.py might produce the following terminal message:
+
+```
+Unable to load numpy_formathandler accelerator from OpenGL_accelerate
+```
+
+However, there should be no noticeable rendering or performance issues. See https://stackoverflow.com/questions/20678260/pyopengl-accelerate-numpy, which reccomends to install PyOpenGL using easy_install instead of within a virutal enviornment. 
+
 
 
 ## Acknowledgments
